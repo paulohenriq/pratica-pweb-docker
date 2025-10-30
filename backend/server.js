@@ -7,7 +7,14 @@ dotenv.config();
 
 const { Task } = bd;
 
-await bd.sequelize.sync();
+// Testa a conexão com o banco de dados
+try {
+  await bd.sequelize.authenticate();
+  console.log("Conexão com o banco de dados estabelecida com sucesso.");
+} catch (error) {
+  console.error("Erro ao conectar ao banco de dados:", error);
+  process.exit(1);
+}
 
 const app = express();
 const port = 3000;

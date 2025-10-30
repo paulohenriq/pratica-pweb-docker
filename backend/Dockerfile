@@ -1,17 +1,23 @@
 # Use a imagem oficial do Node.js como base
 FROM node:18-alpine
 
+# Instala o bash para executar scripts
+RUN apk add --no-cache bash
+
 # Define o diretório de trabalho dentro do container
 WORKDIR /app
 
 # Copia os arquivos de dependências
 COPY package*.json ./
 
-# Instala as dependências
-RUN npm ci --only=production
+# Instala as dependências (incluindo devDependencies para sequelize-cli)
+RUN npm ci
 
 # Copia o código fonte da aplicação
 COPY . .
+
+# Torna o script executável
+RUN chmod +x start.sh
 
 # Expõe a porta que a aplicação usa
 EXPOSE 3000
@@ -20,6 +26,6 @@ EXPOSE 3000
 ENV NODE_ENV=production
 ENV PORT=3000
 
-# Comando para iniciar a aplicação
-CMD ["npm", "start"]
+# Comando para iniciar a aplicação (executa migrations e inicia servidor)
+CMD ["./start.sh"]
 
