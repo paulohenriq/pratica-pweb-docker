@@ -2,68 +2,68 @@ version: '3.8'
 
 services:
   # Banco de dados PostgreSQL
-  db:
+  db-pweb:
     image: postgres:15-alpine
-    container_name: todo-db
+    container_name: db-pweb
     environment:
-      POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
-      POSTGRES_DB: ${DB_NAME:-todolist}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: todolist
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "5434:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_pweb_data:/var/lib/postgresql/data
     networks:
-      - todo-network
+      - todo-pweb-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d postgres"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
       interval: 5s
       timeout: 5s
       retries: 10
       start_period: 10s
 
   # Backend API
-  backend:
+  backend-pweb:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: todo-backend
+    container_name: backend-pweb
     environment:
       NODE_ENV: production
       PORT: 3000
-      DB_HOST: db
+      DB_HOST: db-pweb
       DB_PORT: 5432
-      DB_USER: ${DB_USER:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-postgres}
-      DB_NAME: ${DB_NAME:-todolist}
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: todolist
     ports:
       - "3000:3000"
     depends_on:
-      db:
+      db-pweb:
         condition: service_healthy
     networks:
-      - todo-network
+      - todo-pweb-network
     restart: unless-stopped
 
   # Frontend (Build e serve com Nginx)
-  frontend:
+  frontend-pweb:
     build:
       context: ./frontend
       dockerfile: Dockerfile
       args:
         - VITE_API_BASE_URL=http://localhost:3000
-    container_name: todo-frontend
+    container_name: frontend-pweb
     ports:
       - "80:80"
     depends_on:
-      - backend
+      - backend-pweb
     networks:
-      - todo-network
+      - todo-pweb-network
     restart: unless-stopped
 
 networks:
-  todo-network:
+  todo-pweb-network:
     driver: bridge
 
 volumes:
-  postgres_data:
+  postgres_pweb_data:
